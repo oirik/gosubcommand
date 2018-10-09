@@ -61,3 +61,7 @@ The commands are:
 
 Use "yourapp help <command>" for more information about a command.
 ```
+
+## GoDoc
+
+https://godoc.org/github.com/oirik/gosubcommand
