@@ -42,3 +42,22 @@ func (init *initCommand) Execute(fs *flag.FlagSet) gosubcommand.ExitCode {
     return gosubcommand.ExitCodeSuccess
 }
 ```
+
+And your application will be implemented with subcommand like this:
+
+```sh
+$ yourapp help
+yourapp's Summary.
+
+Usage:
+
+  yourapp <command> [arguments]
+
+The commands are:
+
+  init      Init something
+  help      Show help information
+  version   Show version information
+
+Use "yourapp help <command>" for more information about a command.
+```
