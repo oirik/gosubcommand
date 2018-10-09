@@ -11,8 +11,13 @@ import (
 	"github.com/pkg/errors"
 )
 
+// AppName is used to output root command name in help messages.
 var AppName = path.Base(os.Args[0])
+
+// Version is used to show version text in version command.
 var Version = ""
+
+// Summary is used to output root command summary in help messages.
 var Summary = AppName
 
 // ExitCode represents processes' return code which would be passed to os.Exit() method.
@@ -27,23 +32,28 @@ const (
 	ExitCodeUsageError
 )
 
+// Command represents subcommand which is implemented fro each subcommand.
 type Command interface {
 	Summary() string
 	SetFlag(*flag.FlagSet)
 	Execute(*flag.FlagSet) ExitCode
 }
 
+// Register regists the subcommand to gosubcommand.
 func Register(name string, command Command) {
 	commands[name] = command
 }
 
+// RegisterFunc is easy way of Register func.
 func RegisterFunc(name string, summaryHandler func() string, setFlagHandler func(*flag.FlagSet), executeHandler func(*flag.FlagSet) ExitCode) {
 	Register(name, &commandImp{summary: summaryHandler, setFlag: setFlagHandler, execute: executeHandler})
 }
 
+// Execute should be called afer all necessary Registers are called.
 func Execute() ExitCode {
 
 	Register("help", &helpCommand{})
+
 	if Version != "" {
 		Register("version", &versionCommand{})
 	}
@@ -54,20 +64,20 @@ func Execute() ExitCode {
 	if flag.NArg() == 0 {
 		printUsage()
 		return ExitCodeUsageError
-	} else {
-		name, command, err := getCommand(flag.Arg(0))
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			return ExitCodeUsageError
-		}
-		fs := flag.NewFlagSet(name, flag.ExitOnError)
-		fs.Usage = func() {
-			printCommandUsage(name, fs)
-		}
-		command.SetFlag(fs)
-		fs.Parse(flag.Args()[1:])
-		return command.Execute(fs)
 	}
+
+	name, command, err := getCommand(flag.Arg(0))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return ExitCodeUsageError
+	}
+	fs := flag.NewFlagSet(name, flag.ExitOnError)
+	fs.Usage = func() {
+		printCommandUsage(name, fs)
+	}
+	command.SetFlag(fs)
+	fs.Parse(flag.Args()[1:])
+	return command.Execute(fs)
 }
 
 var commands = map[string]Command{}
@@ -143,20 +153,20 @@ func (help *helpCommand) Execute(fs *flag.FlagSet) ExitCode {
 	if fs.NArg() == 0 {
 		printUsage()
 		return ExitCodeSuccess
-	} else {
-		name, command, err := getCommand(fs.Arg(0))
-		if err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			return ExitCodeUsageError
-		}
-		fs := flag.NewFlagSet(name, flag.ExitOnError)
-		fs.Usage = func() {
-			printCommandUsage(name, fs)
-		}
-		command.SetFlag(fs)
-		fs.Usage()
-		return ExitCodeSuccess
 	}
+
+	name, command, err := getCommand(fs.Arg(0))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return ExitCodeUsageError
+	}
+	tmpfs := flag.NewFlagSet(name, flag.ExitOnError)
+	tmpfs.Usage = func() {
+		printCommandUsage(name, tmpfs)
+	}
+	command.SetFlag(tmpfs)
+	tmpfs.Usage()
+	return ExitCodeSuccess
 }
 
 type versionCommand struct {
